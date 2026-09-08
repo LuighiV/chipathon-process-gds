@@ -79,3 +79,30 @@ jobs:
         ls $DOWNLOADS_PATH
     
         echo "File exists and is not empty."
+
+    - name: Extract each file & add fills to each gds
+      run: |
+
+        source /headless/.bashrc > /dev/null 2>&1
+
+        CONTAINER_BASE_PATH=$DOWNLOADS_PATH
+        ARCHIVES=$( /bin/bash -c 'ls '$CONTAINER_BASE_PATH'/SSCS_2026_0[1-4]_${{ inputs.tag_version }}.tar.xz 2>/dev/null || true' )
+
+        echo $ARCHIVES
+        for ARCHIVE in ${ARCHIVES}; do
+
+            GDS_NAME=$(echo "${ARCHIVE}" | sed -E 's/.*(SSCS_2026_0[1-4]).*/\1/')
+
+            echo "GDS_NAME:"${GDS_NAME}
+            FOLDER_GDS=${CONTAINER_BASE_PATH}"/"${GDS_NAME}
+            mkdir -p ${FOLDER_GDS}
+
+            tar -xvf $ARCHIVE -C $FOLDER_GDS
+
+            INPUT_GDS=${FOLDER_GDS}"/"${GDS_NAME}.gds
+            GDS_FILLED=${FOLDER_GDS}"/"${GDS_NAME}_filled.gds
+
+
+            klayout -b -zz -r ${PDK_ROOT}/${PDK}/libs.tech/klayout/tech/scripts/fill_all.rb -rd input=${INPUT_GDS} -rd output=${GDS_FILLED} -rd no_scribe_line=true
+
+        done
