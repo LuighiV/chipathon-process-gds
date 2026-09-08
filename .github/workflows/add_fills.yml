@@ -19,6 +19,7 @@ jobs:
 
     container:
       image: hpretl/iic-osic-tools:chipathon26
+      options: --user 0
       env:
         ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
       
