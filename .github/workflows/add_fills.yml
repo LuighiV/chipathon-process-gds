@@ -16,6 +16,7 @@ jobs:
     # required to checkout in container
     env:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
+      DOWNLOADS_PATH: './downloads'
 
     container:
       image: hpretl/iic-osic-tools:chipathon26
@@ -128,3 +129,34 @@ jobs:
         name: Filled GDSs
         path: ${{ env.DOWNLOADS_PATH }}/SSCS_2026_filled_${VERSION_TAG}.tar.xz
         retention-days: 5
+
+
+    # Step: Upload generated files back to Google Drive using rclone
+    - name: Upload results to Google Drive
+      env:
+        GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        # Replace with your target Google Drive Folder ID
+        TARGET_DRIVE_FOLDER_ID: "1UBw7TUUZHP5Ht5utrh8GIXqJmrGGcuQE"
+      run: |
+        # 1. Install rclone
+        sudo apt-get update && sudo apt-get install -y rclone
+
+        # 2. Write service account secret to a temporary JSON file
+        echo "$GCP_SA_KEY" > /tmp/sa.json
+
+        # 3. Upload a single file OR an entire output directory
+        # To upload a single file:
+        BASE_PATH=$DOWNLOADS_PATH
+        VERSION_TAG=${{ inputs.tag_version }}
+        OUTPUT_ARCHIVE=${BASE_PATH}"/SSCS_2026_filled_${VERSION_TAG}.tar.xz"
+        rclone copy ${OUTPUT_ARCHIVE} :drive: \
+          --drive-service-account-file /tmp/sa.json \
+          --drive-root-folder-id "$TARGET_DRIVE_FOLDER_ID"
+
+        # OR to upload an entire directory of files:
+        # rclone copy ./output-dir/ :drive: \
+        #   --drive-service-account-file /tmp/sa.json \
+        #   --drive-root-folder-id "$TARGET_DRIVE_FOLDER_ID"
+
+        # 4. Clean up service account key file
+        rm /tmp/sa.json
