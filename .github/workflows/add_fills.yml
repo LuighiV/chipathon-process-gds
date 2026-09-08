@@ -17,6 +17,14 @@ jobs:
       image: hpretl/iic-osic-tools:chipathon26
       
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Update the DRC deck and scripts
+      run: |
+        /bin/bash setup/path-drc.sh
+        /bin/bash setup/path-scripts.sh
+
     # Runs a single command using the runners shell
     - name: Setting the version
       run: echo "Hello ${{ inputs.tag_version }}"
