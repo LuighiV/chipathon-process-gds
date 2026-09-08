@@ -22,6 +22,7 @@ jobs:
       options: --user 0
       env:
         ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
+        DOWNLOADS_PATH: './downloads'
 
     defaults:
       run:
@@ -45,7 +46,7 @@ jobs:
       env:
         GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         # Replace with your actual Google Drive Folder ID
-        DRIVE_FOLDER_ID: "YOUR_GOOGLE_DRIVE_FOLDER_ID"
+        DRIVE_FOLDER_ID: "1i40jdYf53io3pKjWkeNjxL7VZ800jq5o"
       run: |
         # 1. Install rclone
         sudo apt-get update && sudo apt-get install -y rclone
@@ -59,7 +60,22 @@ jobs:
           --drive-service-account-file /tmp/sa.json \
           --drive-root-folder-id "$DRIVE_FOLDER_ID" \
           --include "SSCS_2026_0[1-4]_${{ inputs.tag_version }}.tar.xz" \
-          :drive: ./downloads
+          :drive: $DOWNLOADS_PATH
 
         # 4. Clean up service account key file
         rm /tmp/sa.json
+
+
+    # Step: Check the list of files
+    - name: Check list of files
+      run: |
+        FILE_PATH=$DOWNLOADS_PATH
+        
+        if [ ! -s "$FILE_PATH" ]; then
+          echo "Error: File '$FILE_PATH' does not exist or is empty."
+          exit 1
+        fi
+
+        ls $DOWNLOADS_PATH
+    
+        echo "File exists and is not empty."
