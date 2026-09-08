@@ -13,6 +13,10 @@ on:
 jobs:
   add_fills:
     runs-on: ubuntu-latest
+    # required to checkout in container
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
     container:
       image: hpretl/iic-osic-tools:chipathon26
       
