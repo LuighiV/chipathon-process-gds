@@ -15,10 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     # required to checkout in container
     env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
 
     container:
       image: hpretl/iic-osic-tools:chipathon26
+      env:
+        ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
       
     steps:
     - name: Checkout code
@@ -32,3 +34,27 @@ jobs:
     # Runs a single command using the runners shell
     - name: Setting the version
       run: echo "Hello ${{ inputs.tag_version }}"
+
+    # Step: Download only matching files using rclone
+    - name: Download specific files from Google Drive
+      env:
+        GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        # Replace with your actual Google Drive Folder ID
+        DRIVE_FOLDER_ID: "YOUR_GOOGLE_DRIVE_FOLDER_ID"
+      run: |
+        # 1. Install rclone
+        sudo apt-get update && sudo apt-get install -y rclone
+
+        # 2. Write service account secret to a temporary JSON file
+        echo "$GCP_SA_KEY" > /tmp/sa.json
+
+        # 3. Download using rclone with wildcard pattern filtering
+        # Pattern breakdown:
+        rclone copy \
+          --drive-service-account-file /tmp/sa.json \
+          --drive-root-folder-id "$DRIVE_FOLDER_ID" \
+          --include "SSCS_2026_0[1-4]_${{ inputs.tag_version }}.tar.xz" \
+          :drive: ./downloads
+
+        # 4. Clean up service account key file
+        rm /tmp/sa.json
