@@ -106,3 +106,25 @@ jobs:
             klayout -b -zz -r ${PDK_ROOT}/${PDK}/libs.tech/klayout/tech/scripts/fill_all.rb -rd input=${INPUT_GDS} -rd output=${GDS_FILLED} -rd no_scribe_line=true
 
         done
+
+
+    - name: Compress all filled archives into one
+      run: |
+        BASE_PATH=$DOWNLOADS_PATH
+        VERSION_TAG=${{ inputs.tag_version }}
+        OUTPUT_ARCHIVE=${BASE_PATH}"/SSCS_2026_filled_${VERSION_TAG}.tar.xz"
+
+        tar -cvJf ${OUTPUT_ARCHIVE} -C ${BASE_PATH} $(find ${BASE_PATH} -name "*_filled.gds" -type f -printf "%P\n")
+
+        
+        if [ ! -f "$OUTPUT_ARCHIVE" ]; then
+          echo "Error: File '$OUTPUT_ARCHIVE' does not exist."
+          exit 1
+        fi
+
+    - name: Upload results
+      uses: actions/upload-artifact@v4
+      with:
+        name: Filled GDSs
+        path: ${{ env.DOWNLOADS_PATH }}/SSCS_2026_filled_${VERSION_TAG}.tar.xz
+        retention-days: 5
