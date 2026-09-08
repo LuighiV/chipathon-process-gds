@@ -1,0 +1,22 @@
+# Workflow to add fills to GDS
+name: Add fill to gds
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      tag_version:
+        description: 'Version to process'
+        default: 'v1'
+        required: true
+        type: string
+
+jobs:
+  add_fills:
+    runs-on: ubuntu-latest
+    container:
+      image: hpretl/iic-osic-tools:chipathon26
+      
+    steps:
+    # Runs a single command using the runners shell
+    - name: Setting the version
+      run: echo "Hello ${{ inputs.tag_version }}"
